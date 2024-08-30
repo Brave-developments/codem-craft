@@ -18,6 +18,7 @@ files {
 
 shared_script{
 	'config.lua',
+	 '@es_extended/imports.lua'
 }
 
 dependencies { 
