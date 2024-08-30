@@ -1,26 +1,25 @@
 function GetFrameworkObject()
     local object = nil
+
     if Config.frameworkObject == "esx" then
-        while object == nil do
-            TriggerEvent('esx:getSharedObject', function(obj) object = obj end)
-            Citizen.Wait(0)
-        end
-    end
+        -- Use the new method to get the ESX object (recommended)
+        object = exports['es_extended']:getSharedObject()
 
-    if Config.frameworkObject == "infinity" then
+    elseif Config.frameworkObject == "infinity" then
+        -- Use the ESX Infinity framework method
         object = exports["esx_infinity"]:GetObject()
-    end
 
-    if Config.frameworkObject == "newqb" then
+    elseif Config.frameworkObject == "newqb" then
+        -- Use the new QBCore method
         object = exports["qb-core"]:GetCoreObject()
-    end
-    if Config.frameworkObject == "oldqb" then
+
+    elseif Config.frameworkObject == "oldqb" then
+        -- Fallback to the old QBCore method
         while object == nil do
             TriggerEvent('QBCore:GetObject', function(obj) object = obj end)
             Citizen.Wait(200)
         end
     end
+
     return object
 end
-
-
