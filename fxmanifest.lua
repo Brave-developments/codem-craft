@@ -9,9 +9,7 @@ files {
 	'html/*.css',
 	'html/*.js',
 	'html/*.html',
-	'html/*.ogg',
 	'html/images/*.png',
-	'html/images/*.svg',
 	'html/itemimages/*.png',
 
 }

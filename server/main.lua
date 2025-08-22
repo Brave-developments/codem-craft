@@ -1,22 +1,24 @@
 frameworkObject = nil
 
-function ExecuteSql(query)
+function ExecuteSql(query, params)
     local IsBusy = true
     local result = nil
+    params = params or {}
+
     if Config.Mysql == "oxmysql" then
         if MySQL == nil then
-            exports.oxmysql:execute(query, function(data)
+            exports.oxmysql:execute(query, params, function(data)
                 result = data
                 IsBusy = false
             end)
         else
-            MySQL.query(query, {}, function(data)
+            MySQL.query(query, params, function(data)
                 result = data
                 IsBusy = false
             end)
         end
     elseif Config.Mysql == "mysql-async" then
-        MySQL.Async.fetchAll(query, {}, function(data)
+        MySQL.Async.fetchAll(query, params, function(data)
             result = data
             IsBusy = false
         end)
@@ -52,13 +54,12 @@ AddEventHandler('codem-craft:sendItem', function(a, b, c, d, e, f)
             TriggerClientEvent("codem-cyberhud:Notify123", src, Config.Notifications["success"]["message"],
                 Config.Notifications["success"]["type"], Config.Notifications["success"]["time"])
             local data = ExecuteSql(
-                "INSERT INTO `codem_craft` (`identifier`,`weaponname`,`weapontime`,`weaponlabel`,`itemTime`,`images`) VALUES ('" ..
-                    identifier .. "','" .. a .. "','" .. b .. "','" .. c .. "','" .. time .. "','" .. e .. "')")
+                "INSERT INTO `codem_craft` (`identifier`,`weaponname`,`weapontime`,`weaponlabel`,`itemTime`,`images`) VALUES (?, ?, ?, ?, ?, ?)",
+                {identifier, a, b, c, time, e})
 
-            local item = ExecuteSql("SELECT * FROM users WHERE identifier = '" .. identifier .. "'")
+            local item = ExecuteSql("SELECT * FROM users WHERE identifier = ?", {identifier})
             if item[1] then
-                ExecuteSql("UPDATE  `users` SET `craftxp` = '" .. item[1].craftxp + f .. "' WHERE `identifier` = '" ..
-                               identifier .. "'")
+                ExecuteSql("UPDATE `users` SET `craftxp` = ? WHERE `identifier` = ?", {item[1].craftxp + f, identifier})
 
             end
 
@@ -78,36 +79,42 @@ AddEventHandler('codem-craft:sendItem', function(a, b, c, d, e, f)
 
         local devam = true
         for k, v in pairs(deneme) do
+            local requiredAmount = tonumber(v.amount)
+            local totalAmount = 0
 
+            -- Check if player has enough of the item in total
             local slots = frameworkObject.Player.GetSlotsByItem(xPlayer.PlayerData.items, v.name)
             if slots then
                 for _, slot in pairs(slots) do
-                    if xPlayer.PlayerData.items[slot].amount > tonumber(v.amount) then
-
-                    else
-                        devam = false
+                    if xPlayer.PlayerData.items[slot] then
+                        totalAmount = totalAmount + xPlayer.PlayerData.items[slot].amount
                     end
                 end
-                if devam then
-                    xPlayer.Functions.RemoveItem(v.name, tonumber(v.amount), false)
+
+                if totalAmount >= requiredAmount then
+                    -- Remove the required amount (framework will handle slot distribution)
+                    xPlayer.Functions.RemoveItem(v.name, requiredAmount, false)
+                else
+                    devam = false
                 end
+            else
+                devam = false
             end
         end
         if devam then
             TriggerClientEvent("codem-cyberhud:Notify123", src, Config.Notifications["success"]["message"],
                 Config.Notifications["success"]["type"], Config.Notifications["success"]["time"])
             local data = ExecuteSql(
-                "INSERT INTO `codem_craft` (`identifier`,`weaponname`,`weapontime`,`weaponlabel`,`itemTime`,`images`) VALUES ('" ..
-                    identifier .. "','" .. a .. "','" .. b .. "','" .. c .. "','" .. time .. "','" .. e .. "')")
+                "INSERT INTO `codem_craft` (`identifier`,`weaponname`,`weapontime`,`weaponlabel`,`itemTime`,`images`) VALUES (?, ?, ?, ?, ?, ?)",
+                {identifier, a, b, c, time, e})
 
-            local item = ExecuteSql("SELECT * FROM players WHERE citizenid = '" .. identifier .. "'")
+            local item = ExecuteSql("SELECT * FROM players WHERE citizenid = ?", {identifier})
             if item[1] then
-                ExecuteSql("UPDATE  `players` SET `craftxp` = '" .. item[1].craftxp + f .. "' WHERE `citizenid` = '" ..
-                               identifier .. "'")
+                ExecuteSql("UPDATE `players` SET `craftxp` = ? WHERE `citizenid` = ?", {item[1].craftxp + f, identifier})
 
             end
         else
-            TriggerClientEvent("codem-cyberhud:Notify", src, Config.Notifications["error"]["message"],
+            TriggerClientEvent("codem-cyberhud:Notify123", src, Config.Notifications["error"]["message"],
                 Config.Notifications["error"]["type"], Config.Notifications["error"]["time"])
         end
 
@@ -123,7 +130,7 @@ AddEventHandler('codem-craft:addItem', function(a, b)
 
         xPlayer.addInventoryItem(a, 1)
 
-        ExecuteSql("DELETE FROM `codem_craft` WHERE `id` = '" .. b .. "'")
+        ExecuteSql("DELETE FROM `codem_craft` WHERE `id` = ?", {b})
         TriggerClientEvent('codem-craft:refreshPageAwating', src)
     elseif Config.frameworkObject == 'infinity' then
         local src = source
@@ -133,7 +140,7 @@ AddEventHandler('codem-craft:addItem', function(a, b)
 
         xPlayer.addItem(a, 1)
 
-        ExecuteSql("DELETE FROM `codem_craft` WHERE `id` = '" .. b .. "'")
+        ExecuteSql("DELETE FROM `codem_craft` WHERE `id` = ?", {b})
         TriggerClientEvent('codem-craft:refreshPageAwating', src)
     else
         local src = source
@@ -142,7 +149,7 @@ AddEventHandler('codem-craft:addItem', function(a, b)
 
         xPlayer.Functions.AddItem(a, 1)
 
-        ExecuteSql("DELETE FROM `codem_craft` WHERE `id` = '" .. b .. "'")
+        ExecuteSql("DELETE FROM `codem_craft` WHERE `id` = ?", {b})
         TriggerClientEvent('codem-craft:refreshPageAwating', src)
 
     end
@@ -155,7 +162,7 @@ Citizen.CreateThread(function()
         frameworkObject.RegisterServerCallback('codem-craft:getData', function(source, cb)
             local xPlayer = frameworkObject.GetPlayerFromId(source)
 
-            local item = ExecuteSql("SELECT * FROM codem_craft WHERE identifier = '" .. xPlayer.identifier .. "'")
+            local item = ExecuteSql("SELECT * FROM codem_craft WHERE identifier = ?", {xPlayer.identifier})
             if item then
                 cb(item)
             end
@@ -164,7 +171,7 @@ Citizen.CreateThread(function()
         frameworkObject.OnRequest('codem-craft:getData', function(source, cb)
             local xPlayer = frameworkObject.GetPlayerFromId(source)
 
-            local item = ExecuteSql("SELECT * FROM codem_craft WHERE identifier = '" .. xPlayer.identifier .. "'")
+            local item = ExecuteSql("SELECT * FROM codem_craft WHERE identifier = ?", {xPlayer.identifier})
             if item then
             cb(item)
             end
@@ -190,7 +197,7 @@ Citizen.CreateThread(function()
         frameworkObject.RegisterServerCallback('codem-craft:getxP', function(source, cb)
             local xPlayer = frameworkObject.GetPlayerFromId(source)
             local time = os.time()
-            local item = ExecuteSql("SELECT * FROM users WHERE identifier = '" .. xPlayer.identifier .. "'")
+            local item = ExecuteSql("SELECT * FROM users WHERE identifier = ?", {xPlayer.identifier})
             if item[1] then
 
                 cb(item[1].craftxp, time)
@@ -200,7 +207,7 @@ Citizen.CreateThread(function()
         frameworkObject.OnRequest('codem-craft:getxP', function(source, cb)
             local xPlayer = frameworkObject.GetPlayerFromId(source)
             local time = os.time()
-            local item = ExecuteSql("SELECT * FROM users WHERE identifier = '" .. xPlayer.identifier .. "'")
+            local item = ExecuteSql("SELECT * FROM users WHERE identifier = ?", {xPlayer.identifier})
             if item[1] then
                 cb(item[1].craftxp, time)
             end
@@ -210,7 +217,7 @@ Citizen.CreateThread(function()
             local xPlayer = frameworkObject.Functions.GetPlayer(source)
             local identifier = xPlayer.PlayerData.citizenid
             local time = os.time()
-            local item = ExecuteSql("SELECT * FROM players WHERE `citizenid` = '" .. identifier .. "'")
+            local item = ExecuteSql("SELECT * FROM players WHERE `citizenid` = ?", {identifier})
             if item[1] then
 
                 cb(item[1].craftxp, time)

@@ -36,10 +36,10 @@ Config.CraftItem = {
         xp = 100,
         category = 'weapon',
         required = {
-            { label = 'Scrab', name = "tosti", amount = 10},
-            { label = 'Aluminum', name = "tosti", amount =10},
-            { label = 'Iron', name = "tosti", amount =10},
-            
+            { label = 'Scrab', name = "scrap", amount = 10},
+            { label = 'Aluminum', name = "aluminum", amount =10},
+            { label = 'Iron', name = "iron", amount =10},
+
         },
         imagesname = 'Assault-Rifle-MK-II-Big' ,  ---- for mid image
    
@@ -52,9 +52,9 @@ Config.CraftItem = {
         xp = 100,
         category = 'ammo',
         required = {
-        
-            { label = 'Aluminum', name = "tosti", amount =10},
-            { label = 'Iron', name = "tosti", amount =10},
+
+            { label = 'Aluminum', name = "aluminum", amount =10},
+            { label = 'Iron', name = "iron", amount =10},
         },
         imagesname = 'rifle_ammo' ,  ---- for mid image
       
@@ -83,7 +83,7 @@ end
 Config.Notifications = { -- Notifications
     ["success"] = {
         message = 'İtem craft başlatıldı.',
-        type = "succes",
+        type = "success",
         time = 2500,
     },
   

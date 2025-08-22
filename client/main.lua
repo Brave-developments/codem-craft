@@ -44,7 +44,7 @@ Citizen.CreateThread(function()
             for k,v in pairs(Config.Craft) do
                 local Distance = #(GetEntityCoords(ped)- v.coords) 
                 if Distance <= 3.0 then
-                    sleep  = 0 
+                    sleep = 0 
                     DrawText3D(v.coords.x,v.coords.y,v.coords.z + 0.98,"[E] CRAFT")
                     if IsControlJustReleased(0, 38) then
                         PlayerData = frameworkObject.GetPlayerData()   
@@ -64,12 +64,12 @@ Citizen.CreateThread(function()
             for k,v in pairs(Config.Craft) do
                 local Distance = #(GetEntityCoords(ped)- v.coords) 
                 if Distance <= 3.0 then
-                    sleep  = 0 
+                    sleep = 0 
                     frameworkObject.TextUI("[E] CRAFT")
                     if IsControlJustReleased(0, 38) then
                         PlayerData = frameworkObject.PlayerData
                         frameworkObject.Request('codem-craft:getxP', function(xp,time)
-                            openUI(xp,time,PlayerData)
+                            openUI3(xp,time,PlayerData)
                         end)
                     end
 
@@ -84,7 +84,7 @@ Citizen.CreateThread(function()
             for k,v in pairs(Config.Craft) do
                 local Distance = #(GetEntityCoords(ped)- v.coords) 
                 if Distance <= 3.0 then
-                    sleep  = 0 
+                    sleep = 0 
                     DrawText3D(v.coords.x,v.coords.y,v.coords.z + 0.98,"[E] CRAFT")
                     if IsControlJustReleased(0, 38) then
                         frameworkObject.Functions.TriggerCallback("codem-craft:items", function(data)
